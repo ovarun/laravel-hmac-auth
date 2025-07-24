@@ -1,6 +1,9 @@
 # 🔐 Laravel HMAC Auth Package
 
-A secure, stateless HMAC authentication module for Laravel APIs — ideal for internal services, partner integrations, and multi-platform API consumers (Angular, .NET, Python, Drupal).
+[![Latest Version on Packagist](https://img.shields.io/packagist/v/ovarun/laravel-hmac-auth.svg?style=flat-square)](https://packagist.org/packages/ovarun/laravel-hmac-auth)
+[![Total Downloads](https://img.shields.io/packagist/dt/ovarun/laravel-hmac-auth.svg?style=flat-square)](https://packagist.org/packages/ovarun/laravel-hmac-auth)
+
+Secure, stateless HMAC authentication for Laravel APIs — built for partner APIs, internal microservices, and multi-platform consumers (Angular, .NET, Python, Drupal).
 
 ---
 
@@ -9,31 +12,19 @@ A secure, stateless HMAC authentication module for Laravel APIs — ideal for in
 - PHP 8.0+
 - Laravel 10.x
 - Composer
-- `.env` write access (optional)
 - OpenSSL / `hash_pbkdf2` support
 
 ---
 
 ## 🚀 Installation
 
-1. **Add repository to `composer.json`:**
-
-```json
-"repositories": [
-  {
-    "type": "vcs",
-    "url": "https://bitbucket.org/ovarun/laravel-hmac-auth.git"
-  }
-]
-```
-
-2. **Require the package:**
+Install directly via Packagist:
 
 ```bash
 composer require ovarun/laravel-hmac-auth
 ```
 
-3. **Publish configuration and migration:**
+Publish the config and migrations:
 
 ```bash
 php artisan vendor:publish --tag=hmac-auth
@@ -44,7 +35,7 @@ php artisan migrate
 
 ## ⚙️ Initial Setup
 
-Run the interactive setup command to generate secure keys:
+Run the interactive setup to auto-generate secure HMAC key and salt:
 
 ```bash
 php artisan hmac:setup
@@ -57,77 +48,79 @@ HMAC_SECRET_GENERATOR_KEY='...'
 HMAC_SECRET_GENERATOR_SALT='...'
 ```
 
-These values are used to deterministically generate HMAC client secrets.
+These are used for deterministic, secure secret generation per client.
 
 ---
 
 ## 🔐 Register HMAC Clients
 
-Run the command to add a client:
+Register a new client via:
 
 ```bash
 php artisan hmac:client-create
 ```
 
-It will ask for:
-- **Client Name**
-- (Optional) **Client ID**
-
-Automatically:
-- Sanitizes the `client_id`
-- Generates a 256-bit secret using PBKDF2
-- Stores in `hmac_clients` table
+- Prompts for Client Name (and optional Client ID)
+- Normalizes ID (lowercase, hyphenated, clean)
+- Generates PBKDF2-based 256-bit secret
+- Saves to `hmac_clients` table
 
 ---
 
 ## 🛡 Middleware Usage
 
-Protect your API routes by applying the middleware:
+Apply HMAC protection to your API routes.
 
-### Register in `Kernel.php`:
+### Register Middleware in `app/Http/Kernel.php`:
 
 ```php
 'verify.hmac' => \Ovarun\HmacAuth\Http\Middleware\VerifyHmacSignature::class,
 ```
 
-### Apply to Routes:
+### Use in Routes:
 
 ```php
 Route::middleware('verify.hmac')->group(function () {
-    Route::post('/api/secure-endpoint', [ApiController::class, 'handle']);
+    Route::post('/api/secure-endpoint', [SecureController::class, 'handle']);
 });
 ```
 
 ---
 
-## 📤 Client Authentication
+## 📤 Client-Side Authentication
 
-Clients must send headers:
+Clients must include these HTTP headers:
 
 ```
 X-CLIENT-ID: partner-app-1
 X-TIMESTAMP: 2025-07-24T14:05:00Z
-X-SIGNATURE: HMAC_SHA256(timestamp + method + path + body)
+X-SIGNATURE: {hmac_sha256_signature}
 ```
 
-Signature is calculated as:
+Signature is built from:
+
+```text
+$message = $timestamp . $method . $path . $body
+```
+
+Then:
 
 ```php
-$message = $timestamp . $method . $path . $body;
-$signature = hash_hmac('sha256', $message, $clientSecret);
+hash_hmac('sha256', $message, $clientSecret);
 ```
 
 ---
 
-## 🧪 Testing / Security
+## 🧪 Security Best Practices
 
-- Use HTTPS at all times.
-- Rotate client secrets periodically.
-- Limit timestamp skew via `config/hmac.php` (`timestamp_tolerance_seconds`).
-- Enforce IP whitelisting or rate-limiting as needed.
+- Always use HTTPS
+- Rotate secrets on a schedule
+- Use short timestamp tolerance (`config/hmac.php`)
+- Pair with IP whitelisting or rate limits
+- Never log or expose the secret in responses
 
 ---
 
 ## 📄 License
 
-MIT © Ovarun Dev Team
+MIT © [arun o v](https://packagist.org/packages/ovarun/laravel-hmac-auth)
