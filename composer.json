@@ -1,0 +1,28 @@
+{
+  "name": "ovarun/laravel-hmac-auth",
+  "description": "Secure HMAC authentication module for Laravel APIs",
+  "type": "library",
+  "license": "MIT",
+  "authors": [
+    {
+      "name": "Arun o v",
+      "email": "info@arunov.com"
+    }
+  ],
+  "autoload": {
+    "psr-4": {
+      "Ovarun\\HmacAuth\\": "src/"
+    }
+  },
+  "require": {
+    "php": "^8.0",
+    "illuminate/support": "^10.0"
+  },
+  "extra": {
+    "laravel": {
+      "providers": [
+        "Ovarun\\HmacAuth\\Providers\\HmacAuthServiceProvider"
+      ]
+    }
+  }
+}
